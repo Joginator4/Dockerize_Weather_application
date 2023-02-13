@@ -1,0 +1,30 @@
+global:
+  scrape_interval: 1m
+
+scrape_configs:
+  - job_name: "prometheus"
+    scrape_interval: 15s
+    static_configs:
+    - targets: ["localhost:9090"]
+
+  - job_name: "node-exporter"
+    static_configs:
+    - targets: ["node-exporter:9100"]
+
+  - job_name: "cadvisor"
+    static_configs:
+    - targets: ["cadvisor:8080"]
+
+#  - job_name: "mysql"
+#    static_configs:
+#    - targets: ["mysql:3306"]
+
+#  - job_name: "mysql"
+#    static_configs:
+#    - targets: ["mysql:9400"]
+#remote_write:
+#  - url: "localhost:3000"
+#    basic_auth:
+#      username: "kacperblaz"
+#      password: "eyJrIjoiOTBmNWQ1OTU5ZjZlNzdiMDAzY2Y0MzEwY2QwMmUzZGVkODk0Mjc3NiIsIm4iOiJncmFmYW5hIiwiaWQiOjc3NzA0M30="
+

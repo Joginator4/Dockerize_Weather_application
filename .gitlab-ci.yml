@@ -4,4 +4,4 @@ stages:
 build-job:       
   stage: build
   script:
-    - echo "First Pipeline" > test.txt
+    - echo blablaaa

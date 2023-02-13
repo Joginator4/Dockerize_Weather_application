@@ -1,0 +1,111 @@
+version: "3"
+
+networks:
+  monitoring:
+    driver: bridge
+    ipam:
+      config:
+      - subnet: 172.21.0.0/24
+
+volumes:
+  prometheus_data: {}
+  grafana_data: {}
+  mysql_data: {}
+  python_data: {}
+
+services:
+
+  node-exporter:
+    image: quay.io/prometheus/node-exporter:latest
+    restart: unless-stopped
+    container_name: Node-Exporter
+    pid: host
+    volumes:
+      - '/:/host:ro,rslave'
+    networks:
+      - monitoring
+
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: Prometheus
+    restart: unless-stopped
+    volumes:
+      - ./prometheus_configuration/prometheus.yml:/etc/prometheus/prometheus.yml
+      - prometheus_data:/prometheus
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+    ports:
+      - 9090:9090
+    networks:
+      - monitoring
+#        ipv4_address: 172.21.0.4
+
+  grafana:
+    image: grafana/grafana:latest
+    container_name: Grafana_Dashboard
+    ports:
+      - 3000:3000
+    restart: unless-stopped
+    environment:
+      - GRAFANA_MYSQL_PASSWORD
+    volumes:
+      - grafana_data:/var/lib/grafana
+    depends_on:
+      - prometheus
+      - mysql
+    networks:
+      - monitoring
+
+  cadvisor:
+    image: google/cadvisor:latest
+    container_name: Cadvisor
+    pid: host
+    ports:
+      - 8080:8080
+    networks:
+      - monitoring
+    volumes:
+      - '/:/host:ro'
+      - '/var/run:/var/run:ro'
+      - '/sys:/sys:ro'
+      - '/var/lib/docker/:/var/lib/docker:ro'
+      - '/dev/disk/:/dev/disk:ro'
+    privileged: true
+    devices:
+      - /dev/ksmg
+
+  mysql:
+    image: mysql:2.0
+    container_name: mysql_database
+    ports:
+      - 3306:3306
+    networks:
+      monitoring:
+        ipv4_address: 172.21.0.100
+    volumes:
+      - mysql_data:/var/lib/mysql
+    environment:
+      - MYSQL_ROOT_LOGIN
+      - MYSQL_ROOT_PASSWORD
+
+  python3.10:
+    image: python:11
+    container_name: Weather_App
+    ports:
+      - 7000:7000
+    networks:
+      - monitoring
+    volumes:
+      - python_data:/var/lib/python
+    command: 
+      - /bin/bash
+      - -c
+      - |
+        sleep 10
+        python3 weather_app.py
+        sleep 30d
+    environment:
+      - MYSQL_ROOT_LOGIN
+      - MYSQL_ROOT_PASSWORD
+      - API_KEY
+      - CITY
